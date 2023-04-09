@@ -30,6 +30,7 @@
     "@astrojs/node": "^5.1.0",
     "@astrojs/solid-js": "^2.1.0",
     "@astrojs/vercel": "^3.2.1",
+    "@skillnull/device-js": "^1.1.9",
     "@solid-primitives/event-listener": "^2.2.8",
     "@solid-primitives/resize-observer": "^2.0.12",
     "@unocss/reset": "^0.50.6",

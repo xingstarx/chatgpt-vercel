@@ -75,6 +75,7 @@ export const post: APIRoute = async context => {
       key?: string
       temperature: number
       password?: string
+      deviceId?: string
       model: Model
     } = await context.request.json()
     const {
@@ -82,6 +83,7 @@ export const post: APIRoute = async context => {
       key = localKey,
       temperature = 0.6,
       password,
+      deviceId,
       model = defaultModel
     } = body
 
@@ -128,6 +130,7 @@ export const post: APIRoute = async context => {
         )
       else throw new Error("太长了，缩短一点吧。")
     }
+    //todo 在这里先去查询mongo里面的记录吧，就是看用户今天已经用了多少次了。根据ip以及deviceId查询
 
     const encoder = new TextEncoder()
     const decoder = new TextDecoder()

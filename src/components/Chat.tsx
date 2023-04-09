@@ -9,6 +9,7 @@ import throttle from "just-throttle"
 import { isMobile } from "~/utils"
 import type { Setting } from "~/system"
 import { makeEventListener } from "@solid-primitives/event-listener"
+import Device from "@skillnull/device-js"
 
 export default function (props: {
   prompts: PromptItem[]
@@ -107,6 +108,12 @@ export default function (props: {
     } catch {
       console.log("Setting parse error")
     }
+    Device.Info({
+      info: ["UUID"]
+    }).then(data => {
+      document.getElementById("#device_id").value = data.UUID
+      console.log(data.UUID)
+    })
   })
 
   createEffect((prev: number | undefined) => {
@@ -231,6 +238,7 @@ export default function (props: {
       role: "user",
       content: inputValue
     }
+    const deviceId = document.getElementById("#device_id").value
     if (systemRule) message.content += "。\n\n" + systemRule
     const response = await fetch("/api", {
       method: "POST",
@@ -243,6 +251,7 @@ export default function (props: {
         key: setting().openaiAPIKey || undefined,
         temperature: setting().openaiAPITemperature / 100,
         password: setting().password,
+        deviceId: deviceId === undefined ? "" : deviceId,
         model: setting().model
       }),
       signal: controller.signal
@@ -418,6 +427,7 @@ export default function (props: {
                 select={selectPrompt}
               ></PromptList>
             </Show>
+            <input type="hidden" id="device_id" value="" />
             <div class="flex items-end">
               <textarea
                 ref={inputRef!}
