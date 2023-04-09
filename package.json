@@ -33,6 +33,7 @@
     "@skillnull/device-js": "^1.1.9",
     "@solid-primitives/event-listener": "^2.2.8",
     "@solid-primitives/resize-observer": "^2.0.12",
+    "@supercharge/request-ip": "^1.2.0",
     "@unocss/reset": "^0.50.6",
     "array-keyed-map": "^2.1.3",
     "astro": "^2.1.3",

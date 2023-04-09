@@ -5,6 +5,7 @@ import type { ChatMessage, Model } from "~/types"
 import { countTokens } from "~/utils/tokens"
 import { splitKeys, randomKey, fetchWithTimeout } from "~/utils"
 import { defaultMaxInputTokens, defaultModel } from "~/system"
+import RequestIp from "@supercharge/request-ip"
 
 export const config = {
   runtime: "edge",
@@ -130,10 +131,14 @@ export const post: APIRoute = async context => {
         )
       else throw new Error("太长了，缩短一点吧。")
     }
+
     //todo 在这里先去查询mongo里面的记录吧，就是看用户今天已经用了多少次了。根据ip以及deviceId查询
 
     const encoder = new TextEncoder()
     const decoder = new TextDecoder()
+
+    const ip = RequestIp.getClientIp(context.request)
+    console.log("ip = " + ip)
 
     const rawRes = await fetchWithTimeout(
       `https://${baseURL}/v1/chat/completions`,
@@ -176,6 +181,7 @@ export const post: APIRoute = async context => {
           if (event.type === "event") {
             const data = event.data
             if (data === "[DONE]") {
+              //在这里面写入本次成功的记录数据
               controller.close()
               return
             }

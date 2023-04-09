@@ -25,6 +25,9 @@ dependencies:
   '@solid-primitives/resize-observer':
     specifier: ^2.0.12
     version: 2.0.12(solid-js@1.6.15)
+  '@supercharge/request-ip':
+    specifier: ^1.2.0
+    version: registry.npmmirror.com/@supercharge/request-ip@1.2.0
   '@unocss/reset':
     specifier: ^0.50.6
     version: 0.50.6
@@ -6997,6 +7000,12 @@ packages:
     resolution: {integrity: sha512-v9K1S3w6lCuPiwTCDyJaAflLXlxX8JiFzxkApmlOi5gcMI5r7Jq7glPGTmZ3PvLd9zF8tPi8eIJKz3Zs8akckg==, registry: https://registry.npm.taobao.org/, tarball: https://registry.npmmirror.com/@skillnull/device-js/-/device-js-1.1.9.tgz}
     name: '@skillnull/device-js'
     version: 1.1.9
+    dev: false
+
+  registry.npmmirror.com/@supercharge/request-ip@1.2.0:
+    resolution: {integrity: sha512-wlt6JW69MHqLY2M6Sm/jVyCojNRKq2CBvwH0Hbx24SFhDQQGkgEjeKxVutDxHSyrWixFaOSLXC27euzxijhyMQ==, registry: https://registry.npm.taobao.org/, tarball: https://registry.npmmirror.com/@supercharge/request-ip/-/request-ip-1.2.0.tgz}
+    name: '@supercharge/request-ip'
+    version: 1.2.0
     dev: false
 
   registry.npmmirror.com/@surma/rollup-plugin-off-main-thread@2.2.3:
