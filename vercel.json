@@ -1,12 +1,7 @@
 {
-  "crons": [
-    {
-      "path": "/api/cron",
-      "schedule": "0 0 * * *"
-    },
-    {
-      "path": "/api/cron",
-      "schedule": "0 12 * * *"
+  "build": {
+    "env": {
+      "NODE_OPTIONS": "--unhandled-rejections=strict"
     }
-  ]
+  }
 }
