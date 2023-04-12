@@ -5,7 +5,6 @@ import type { ChatMessage, Model } from "~/types"
 import { countTokens } from "~/utils/tokens"
 import { splitKeys, randomKey, fetchWithTimeout } from "~/utils"
 import { defaultMaxInputTokens, defaultModel } from "~/system"
-import RequestIp from "@supercharge/request-ip"
 import MongoDBService from "../../utils/MongoDBService"
 
 export const config = {
