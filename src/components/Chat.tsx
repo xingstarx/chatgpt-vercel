@@ -9,7 +9,7 @@ import throttle from "just-throttle"
 import { isMobile } from "~/utils"
 import type { Setting } from "~/system"
 import { makeEventListener } from "@solid-primitives/event-listener"
-// import Device from "@skillnull/device-js"
+import Device from "@skillnull/device-js"
 
 export default function (props: {
   prompts: PromptItem[]
@@ -108,12 +108,12 @@ export default function (props: {
     } catch {
       console.log("Setting parse error")
     }
-    // Device.Info({
-    //   info: ["UUID"]
-    // }).then(data => {
-    //   document.getElementById("device_id").value = data.UUID
-    //   console.log(data.UUID)
-    // })
+    Device.Info({
+      info: ["UUID"]
+    }).then(data => {
+      document.getElementById("device_id").value = data.UUID
+      console.log(data.UUID)
+    })
   })
 
   createEffect((prev: number | undefined) => {
