@@ -140,7 +140,11 @@ export const post: APIRoute = async context => {
       throw new Error("当前不是通过浏览器访问的吧，您被拒绝了。")
     }
 
-    const ip = RequestIp.getClientIp(context.request)
+    const ip =
+      context.request.headers["x-real-ip"] ||
+      req.headers["x-forwarded-for"] ||
+      req.socket.remoteAddress
+
     console.log("ip = " + ip)
 
     if (!ip) {
