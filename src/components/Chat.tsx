@@ -111,7 +111,7 @@ export default function (props: {
     Device.Info({
       info: ["UUID"]
     }).then(data => {
-      document.getElementById("#device_id").value = data.UUID
+      document.getElementById("device_id").value = data.UUID
       console.log(data.UUID)
     })
   })
@@ -192,6 +192,7 @@ export default function (props: {
     if (!inputValue) {
       return
     }
+    const deviceId = document.getElementById("device_id").value
     // @ts-ignore
     if (window?.umami) umami.trackEvent("chat_generate")
     setInputContent("")
@@ -212,7 +213,7 @@ export default function (props: {
       ])
     }
     try {
-      await fetchGPT(inputValue)
+      await fetchGPT(inputValue, deviceId)
     } catch (error: any) {
       setLoading(false)
       setController()
@@ -229,7 +230,7 @@ export default function (props: {
     archiveCurrentMessage()
   }
 
-  async function fetchGPT(inputValue: string) {
+  async function fetchGPT(inputValue: string, deviceId: string) {
     setLoading(true)
     const controller = new AbortController()
     setController(controller)
@@ -238,7 +239,6 @@ export default function (props: {
       role: "user",
       content: inputValue
     }
-    const deviceId = document.getElementById("#device_id").value
     if (systemRule) message.content += "。\n\n" + systemRule
     const response = await fetch("/api", {
       method: "POST",
@@ -427,8 +427,9 @@ export default function (props: {
                 select={selectPrompt}
               ></PromptList>
             </Show>
-            <input type="hidden" id="device_id" value="" />
+
             <div class="flex items-end">
+              <input id="device_id" type="hidden" value="" />
               <textarea
                 ref={inputRef!}
                 id="input"

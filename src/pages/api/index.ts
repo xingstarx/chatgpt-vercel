@@ -6,6 +6,7 @@ import { countTokens } from "~/utils/tokens"
 import { splitKeys, randomKey, fetchWithTimeout } from "~/utils"
 import { defaultMaxInputTokens, defaultModel } from "~/system"
 import RequestIp from "@supercharge/request-ip"
+import MongoDBService from "../../utils/MongoDBService"
 
 export const config = {
   runtime: "edge",
@@ -37,6 +38,7 @@ export const config = {
 }
 
 export const localKey = import.meta.env.OPENAI_API_KEY || ""
+const mongoUrl = import.meta.env.MONGO_URL || ""
 
 export const baseURL = import.meta.env.NOGFW
   ? "api.openai.com"
@@ -132,13 +134,45 @@ export const post: APIRoute = async context => {
       else throw new Error("太长了，缩短一点吧。")
     }
 
-    //todo 在这里先去查询mongo里面的记录吧，就是看用户今天已经用了多少次了。根据ip以及deviceId查询
-
-    const encoder = new TextEncoder()
-    const decoder = new TextDecoder()
+    //这种判断方式会把空字符串、0、NaN、false 等值也当做“空”，因此需要注意。
+    if (!deviceId) {
+      // 设备id为空，说明是异常设备，直接抛异常吧
+      throw new Error("当前不是通过浏览器访问的吧，您被拒绝了。")
+    }
 
     const ip = RequestIp.getClientIp(context.request)
     console.log("ip = " + ip)
+
+    if (!ip) {
+      // 设备id为空，说明是异常设备，直接抛异常吧
+      throw new Error("访问ip不能为空，请联系网站管理员xingstarx")
+    }
+    //todo 在这里先去查询mongo里面的记录吧，就是看用户今天已经用了多少次了。根据ip以及deviceId查询
+    if (!mongoUrl) {
+      //如果mongoUrl是空，说明还没有配置mongoDb的数据库,那么就跳过数据库相关的逻辑
+      const mongoService = MongoDBService.getInstance()
+      await mongoService.connect()
+      const recordsCount = await mongoService.countRecordsByDeviceIdAndChatTime(
+        "chat",
+        deviceId
+      )
+      console.log("countRecordsByDeviceIdAndChatTime result:", recordsCount)
+      if (recordsCount >= 30) {
+        throw new Error("今天累计使用超过30次了，请明天再白嫖吧。")
+      }
+      const recordsCount2 = await mongoService.countRecordsByIpAndChatTime(
+        "chat",
+        ip
+      )
+      console.log("countRecordsByIpAndChatTime result:", recordsCount2)
+      if (recordsCount >= 30) {
+        throw new Error("今天累计使用超过30次了，请明天再白嫖吧。")
+      }
+      await mongoService.disconnect()
+    }
+
+    const encoder = new TextEncoder()
+    const decoder = new TextDecoder()
 
     const rawRes = await fetchWithTimeout(
       `https://${baseURL}/v1/chat/completions`,
@@ -177,11 +211,19 @@ export const post: APIRoute = async context => {
 
     const stream = new ReadableStream({
       async start(controller) {
-        const streamParser = (event: ParsedEvent | ReconnectInterval) => {
+        let completeData = "" // 定义一个变量用于存储接收到的完整数据
+        const streamParser = async (event: ParsedEvent | ReconnectInterval) => {
           if (event.type === "event") {
             const data = event.data
             if (data === "[DONE]") {
               //在这里面写入本次成功的记录数据
+              if (!mongoUrl) {
+                //配置MongoDB的url后才执行这个逻辑呢
+                const question = messages[messages.length - 1].content
+                console.log("question = " + question)
+                console.log("Complete data: " + completeData) // 输出完整数据
+                await insertChatData(ip, deviceId, question, completeData)
+              }
               controller.close()
               return
             }
@@ -189,6 +231,7 @@ export const post: APIRoute = async context => {
               const json = JSON.parse(data)
               const text = json.choices[0].delta?.content
               const queue = encoder.encode(text)
+              completeData += text // 如果不是"[DONE]"，则将数据追加到完整数据变量中
               controller.enqueue(queue)
             } catch (e) {
               controller.error(e)
@@ -221,6 +264,43 @@ type Billing = {
   totalGranted: number
   totalUsed: number
   totalAvailable: number
+}
+
+/**
+ * 插入当前的ChatGPT对话数据到MongoDB中
+ * @param ip
+ * @param deviceId
+ */
+export async function insertChatData(
+  ip: string,
+  deviceId: string,
+  question: string,
+  answer: string
+) {
+  const mongoService = MongoDBService.getInstance()
+  await mongoService.connect()
+  const now = new Date()
+  const timestamp = Math.floor(now.getTime() / 1000) // 获取秒级时间戳
+  const insertResult = await mongoService.insertOne("chat", {
+    device_id: deviceId,
+    ip_address: ip,
+    chat_time: timestamp,
+    chat_time_format: formatDateTime(now),
+    question: question,
+    answer: answer
+  })
+  console.log("insert result:", insertResult.result)
+  await mongoService.disconnect()
+}
+
+function formatDateTime(date: any) {
+  const year = date.getFullYear()
+  const month = (date.getMonth() + 1).toString().padStart(2, "0")
+  const day = date.getDate().toString().padStart(2, "0")
+  const hours = date.getHours().toString().padStart(2, "0")
+  const minutes = date.getMinutes().toString().padStart(2, "0")
+  const seconds = date.getSeconds().toString().padStart(2, "0")
+  return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`
 }
 
 export async function fetchBilling(key: string): Promise<Billing> {
