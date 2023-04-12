@@ -72,6 +72,12 @@ const pwd = import.meta.env.PASSWORD
 
 export const post: APIRoute = async context => {
   try {
+    const req = context.request
+    const ip =
+      req.headers["x-real-ip"] ||
+      req.headers["x-forwarded-for"] ||
+      req.socket.remoteAddress
+
     const body: {
       messages?: ChatMessage[]
       key?: string
@@ -138,11 +144,6 @@ export const post: APIRoute = async context => {
       // 设备id为空，说明是异常设备，直接抛异常吧
       throw new Error("当前不是通过浏览器访问的吧，您被拒绝了。")
     }
-
-    const ip =
-      context.request.headers["x-real-ip"] ||
-      req.headers["x-forwarded-for"] ||
-      req.socket.remoteAddress
 
     console.log("ip = " + ip)
 
