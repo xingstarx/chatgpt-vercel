@@ -154,7 +154,7 @@ export const post: APIRoute = async context => {
     console.log("mongoDbProxyUrl = " + mongoDbProxyUrl)
     console.log("!mongoDbProxyUrl = " + !mongoDbProxyUrl)
 
-    if (!mongoDbProxyUrl) {
+    if (mongoDbProxyUrl) {
       //如果mongoDbProxyUrl是空，说明还没有配置代理服务，需要来监控chatgpt-vercel的站点使用情况, 防止白嫖
       // 查是否当天还有免费次数
       const isReachedLimitCountUrl = `${mongoDbProxyUrl}/api/isReachedLimitCount?collectionName=${mongoDbCollectionName}&ip=${ip}` //在完整的Url后面附带参数
@@ -231,7 +231,7 @@ export const post: APIRoute = async context => {
             const data = event.data
             if (data === "[DONE]") {
               //在这里面写入本次成功的记录数据
-              if (!mongoDbProxyUrl) {
+              if (mongoDbProxyUrl) {
                 //配置MongoDB的代理mongoDbProxyUrl后才执行这个逻辑呢
                 const question = messages[messages.length - 1].content
                 console.log("question = " + question)
