@@ -152,6 +152,8 @@ export const post: APIRoute = async context => {
     }
     // 逻辑修改为，调用另外一个接口服务去判断当天是否还有剩余次数，具体当天最大免费次数的配置也在那个站点上
     console.log("mongoDbProxyUrl = " + mongoDbProxyUrl)
+    console.log("!mongoDbProxyUrl = " + !mongoDbProxyUrl)
+
     if (!mongoDbProxyUrl) {
       //如果mongoDbProxyUrl是空，说明还没有配置代理服务，需要来监控chatgpt-vercel的站点使用情况, 防止白嫖
       // 查是否当天还有免费次数
