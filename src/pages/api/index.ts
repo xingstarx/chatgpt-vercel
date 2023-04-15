@@ -92,7 +92,6 @@ export const post: APIRoute = async context => {
       key?: string
       temperature: number
       password?: string
-      deviceId?: string
       model: Model
     } = await context.request.json()
     const {
@@ -100,7 +99,6 @@ export const post: APIRoute = async context => {
       key = localKey,
       temperature = 0.6,
       password,
-      deviceId,
       model = defaultModel
     } = body
 
@@ -148,12 +146,6 @@ export const post: APIRoute = async context => {
       else throw new Error("太长了，缩短一点吧。")
     }
 
-    //这种判断方式会把空字符串、0、NaN、false 等值也当做“空”，因此需要注意。
-    if (!deviceId) {
-      // 设备id为空，说明是异常设备，直接抛异常吧
-      throw new Error("当前不是通过浏览器访问的吧，您被拒绝了。")
-    }
-
     console.log("ip = " + ip)
 
     if (!ip) {
@@ -165,7 +157,7 @@ export const post: APIRoute = async context => {
     if (!mongoDbProxyUrl) {
       //如果mongoDbProxyUrl是空，说明还没有配置代理服务，需要来监控chatgpt-vercel的站点使用情况, 防止白嫖
       // 查是否当天还有免费次数
-      const isReachedLimitCountUrl = `${mongoDbProxyUrl}/api/isReachedLimitCount?collectionName=${mongoDbCollectionName}&ip=${ip}&deviceId=${deviceId}` //在完整的Url后面附带参数
+      const isReachedLimitCountUrl = `${mongoDbProxyUrl}/api/isReachedLimitCount?collectionName=${mongoDbCollectionName}&ip=${ip}` //在完整的Url后面附带参数
       const base64UserNamePassword = btoa(
         `${mongoDbProxyUrlUserName}:${mongoDbProxyUrlPassword}`
       )
@@ -240,7 +232,7 @@ export const post: APIRoute = async context => {
                 const question = messages[messages.length - 1].content
                 console.log("question = " + question)
                 console.log("Complete data: " + completeData) // 输出完整数据
-                await insertChatData(ip, deviceId, question, completeData)
+                await insertChatData(ip, question, completeData)
               }
               controller.close()
               return
@@ -291,7 +283,6 @@ type Billing = {
  */
 export async function insertChatData(
   ip: string,
-  deviceId: string,
   question: string,
   answer: string
 ) {
@@ -313,7 +304,6 @@ export async function insertChatData(
         collectionName: mongoDbCollectionName,
         document: {
           ip: ip,
-          deviceId: deviceId,
           question: question,
           answer: answer
         }

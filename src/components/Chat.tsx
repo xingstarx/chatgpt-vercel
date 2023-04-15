@@ -9,7 +9,6 @@ import throttle from "just-throttle"
 import { isMobile } from "~/utils"
 import type { Setting } from "~/system"
 import { makeEventListener } from "@solid-primitives/event-listener"
-// import Device from "@skillnull/device-js"
 
 export default function (props: {
   prompts: PromptItem[]
@@ -108,12 +107,6 @@ export default function (props: {
     } catch {
       console.log("Setting parse error")
     }
-    // Device.Info({
-    //   info: ["UUID"]
-    // }).then(data => {
-    //   document.getElementById("device_id").value = data.UUID
-    //   console.log(data.UUID)
-    // })
   })
 
   createEffect((prev: number | undefined) => {
@@ -192,7 +185,6 @@ export default function (props: {
     if (!inputValue) {
       return
     }
-    const deviceId = document.getElementById("device_id").value
     // @ts-ignore
     if (window?.umami) umami.trackEvent("chat_generate")
     setInputContent("")
@@ -213,7 +205,7 @@ export default function (props: {
       ])
     }
     try {
-      await fetchGPT(inputValue, deviceId)
+      await fetchGPT(inputValue)
     } catch (error: any) {
       setLoading(false)
       setController()
@@ -230,7 +222,7 @@ export default function (props: {
     archiveCurrentMessage()
   }
 
-  async function fetchGPT(inputValue: string, deviceId: string) {
+  async function fetchGPT(inputValue: string) {
     setLoading(true)
     const controller = new AbortController()
     setController(controller)
@@ -251,7 +243,6 @@ export default function (props: {
         key: setting().openaiAPIKey || undefined,
         temperature: setting().openaiAPITemperature / 100,
         password: setting().password,
-        deviceId: deviceId === undefined ? "" : deviceId,
         model: setting().model
       }),
       signal: controller.signal
@@ -429,7 +420,6 @@ export default function (props: {
             </Show>
 
             <div class="flex items-end">
-              <input id="device_id" type="hidden" value="" />
               <textarea
                 ref={inputRef!}
                 id="input"
