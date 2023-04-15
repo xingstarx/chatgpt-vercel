@@ -5,6 +5,7 @@ import type { ChatMessage, Model } from "~/types"
 import { countTokens } from "~/utils/tokens"
 import { splitKeys, randomKey, fetchWithTimeout } from "~/utils"
 import { defaultMaxInputTokens, defaultModel } from "~/system"
+import { ipAddress } from "@astrojs/vercel/edge"
 
 export const config = {
   runtime: "edge",
@@ -82,10 +83,7 @@ const pwd = import.meta.env.PASSWORD
 export const post: APIRoute = async context => {
   try {
     const req = context.request
-    const ip =
-      req.headers["x-real-ip"] ||
-      req.headers["x-forwarded-for"] ||
-      req.socket.remoteAddress
+    const ip = ipAddress(context.request) || ""
 
     const body: {
       messages?: ChatMessage[]
