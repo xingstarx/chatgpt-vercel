@@ -5,7 +5,7 @@ import type { ChatMessage, Model } from "~/types"
 import { countTokens } from "~/utils/tokens"
 import { splitKeys, randomKey, fetchWithTimeout } from "~/utils"
 import { defaultMaxInputTokens, defaultModel } from "~/system"
-import { ipAddress } from "@astrojs/vercel/edge"
+import { ipAddress } from "@vercel/edge"
 
 export const config = {
   runtime: "edge",
