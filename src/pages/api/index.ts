@@ -171,10 +171,12 @@ export const post: APIRoute = async context => {
         }).then(r => r.json())
         //data对应的是个boolean值 如果是true, 说明是OK的，没有超过上限
         if (!result.data) {
+          console.error("今天累计使用超过30次了，请明天再白嫖吧。")
           throw new Error("今天累计使用超过30次了，请明天再白嫖吧。")
         }
       } catch (e) {
         console.error(e)
+        console.error("今天累计使用超过30次了，请明天再白嫖吧。")
         throw new Error("今天累计使用超过30次了，请明天再白嫖吧。")
       }
     }
