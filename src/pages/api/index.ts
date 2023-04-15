@@ -5,7 +5,6 @@ import type { ChatMessage, Model } from "~/types"
 import { countTokens } from "~/utils/tokens"
 import { splitKeys, randomKey, fetchWithTimeout } from "~/utils"
 import { defaultMaxInputTokens, defaultModel } from "~/system"
-import MongoDBService from "../../utils/MongoDBService"
 
 export const config = {
   runtime: "edge",
@@ -37,7 +36,6 @@ export const config = {
 }
 
 export const localKey = import.meta.env.OPENAI_API_KEY || ""
-const mongoUrl = import.meta.env.MONGO_URL || ""
 
 export const baseURL = import.meta.env.NOGFW
   ? "api.openai.com"
@@ -45,6 +43,17 @@ export const baseURL = import.meta.env.NOGFW
       /^https?:\/\//,
       ""
     )
+//将当天免费次数检测服务，以及插入聊天会话消息服务的功能迁移到一个新的站点，
+//edge function 不支持操作MongoDB呢，只能用一个新的站点作为mongoDB的代理服务
+const mongoDbProxyUrl = import.meta.env.MONGO_DB_PROXY_URL || ""
+const mongoDbCollectionName = "chat" //对应的记录是chat表
+
+//访问mongoDB代理服务的鉴权的用户名
+const mongoDbProxyUrlUserName =
+  import.meta.env.MONGO_DB_PROXY_URL_USER_NAME || ""
+//访问mongoDB代理服务的鉴权的用户密码
+const mongoDbProxyUrlPassword =
+  import.meta.env.MONGO_DB_PROXY_URL_PASS_WORD || ""
 
 const timeout = Number(import.meta.env.TIMEOUT)
 
@@ -151,28 +160,33 @@ export const post: APIRoute = async context => {
       // 设备id为空，说明是异常设备，直接抛异常吧
       throw new Error("访问ip不能为空，请联系网站管理员xingstarx")
     }
-    //todo 在这里先去查询mongo里面的记录吧，就是看用户今天已经用了多少次了。根据ip以及deviceId查询
-    if (!mongoUrl) {
-      //如果mongoUrl是空，说明还没有配置mongoDb的数据库,那么就跳过数据库相关的逻辑
-      const mongoService = MongoDBService.getInstance()
-      await mongoService.connect()
-      const recordsCount = await mongoService.countRecordsByDeviceIdAndChatTime(
-        "chat",
-        deviceId
+    // 逻辑修改为，调用另外一个接口服务去判断当天是否还有剩余次数，具体当天最大免费次数的配置也在那个站点上
+
+    if (!mongoDbProxyUrl) {
+      //如果mongoDbProxyUrl是空，说明还没有配置代理服务，需要来监控chatgpt-vercel的站点使用情况, 防止白嫖
+      // 查是否当天还有免费次数
+      const isReachedLimitCountUrl = `${mongoDbProxyUrl}/api/isReachedLimitCount?collectionName=${mongoDbCollectionName}&ip=${ip}&deviceId=${deviceId}` //在完整的Url后面附带参数
+      const base64UserNamePassword = btoa(
+        `${mongoDbProxyUrlUserName}:${mongoDbProxyUrlPassword}`
       )
-      console.log("countRecordsByDeviceIdAndChatTime result:", recordsCount)
-      if (recordsCount >= 30) {
+      // 获取API限额
+      const headers = {
+        Authorization: "authorization: Basic " + base64UserNamePassword,
+        "Content-Type": "application/json"
+      }
+      try {
+        const result = await fetch(isReachedLimitCountUrl, {
+          headers,
+          method: "GET"
+        }).then(r => r.json())
+        //data对应的是个boolean值 如果是true, 说明是OK的，没有超过上限
+        if (!result.data) {
+          throw new Error("今天累计使用超过30次了，请明天再白嫖吧。")
+        }
+      } catch (e) {
+        console.error(e)
         throw new Error("今天累计使用超过30次了，请明天再白嫖吧。")
       }
-      const recordsCount2 = await mongoService.countRecordsByIpAndChatTime(
-        "chat",
-        ip
-      )
-      console.log("countRecordsByIpAndChatTime result:", recordsCount2)
-      if (recordsCount >= 30) {
-        throw new Error("今天累计使用超过30次了，请明天再白嫖吧。")
-      }
-      await mongoService.disconnect()
     }
 
     const encoder = new TextEncoder()
@@ -221,8 +235,8 @@ export const post: APIRoute = async context => {
             const data = event.data
             if (data === "[DONE]") {
               //在这里面写入本次成功的记录数据
-              if (!mongoUrl) {
-                //配置MongoDB的url后才执行这个逻辑呢
+              if (!mongoDbProxyUrl) {
+                //配置MongoDB的代理mongoDbProxyUrl后才执行这个逻辑呢
                 const question = messages[messages.length - 1].content
                 console.log("question = " + question)
                 console.log("Complete data: " + completeData) // 输出完整数据
@@ -281,30 +295,38 @@ export async function insertChatData(
   question: string,
   answer: string
 ) {
-  const mongoService = MongoDBService.getInstance()
-  await mongoService.connect()
-  const now = new Date()
-  const timestamp = Math.floor(now.getTime() / 1000) // 获取秒级时间戳
-  const insertResult = await mongoService.insertOne("chat", {
-    device_id: deviceId,
-    ip_address: ip,
-    chat_time: timestamp,
-    chat_time_format: formatDateTime(now),
-    question: question,
-    answer: answer
-  })
-  console.log("insert result:", insertResult.result)
-  await mongoService.disconnect()
-}
-
-function formatDateTime(date: any) {
-  const year = date.getFullYear()
-  const month = (date.getMonth() + 1).toString().padStart(2, "0")
-  const day = date.getDate().toString().padStart(2, "0")
-  const hours = date.getHours().toString().padStart(2, "0")
-  const minutes = date.getMinutes().toString().padStart(2, "0")
-  const seconds = date.getSeconds().toString().padStart(2, "0")
-  return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`
+  // 插入本条聊天消息回话
+  const insertChatUrl = `${mongoDbProxyUrl}/api/insertChat` //在完整的Url后面附带参数
+  const base64UserNamePassword = btoa(
+    `${mongoDbProxyUrlUserName}:${mongoDbProxyUrlPassword}`
+  )
+  // 获取API限额
+  const headers = {
+    Authorization: "authorization: Basic " + base64UserNamePassword,
+    "Content-Type": "application/json"
+  }
+  try {
+    const result = await fetch(insertChatUrl, {
+      headers,
+      method: "POST",
+      body: JSON.stringify({
+        collectionName: mongoDbCollectionName,
+        document: {
+          ip: ip,
+          deviceId: deviceId,
+          question: question,
+          answer: answer
+        }
+      })
+    }).then(r => r.json())
+    //data对应的是个boolean值 如果是true, 说明是OK的，插入成功了
+    if (!result.data) {
+      console.error(`插入失败了，快去${mongoDbProxyUrl}检查下原因吧`)
+    }
+  } catch (e) {
+    console.error(e)
+    console.error(`插入失败了,抛异常了，快去${mongoDbProxyUrl}检查下原因吧`)
+  }
 }
 
 export async function fetchBilling(key: string): Promise<Billing> {
