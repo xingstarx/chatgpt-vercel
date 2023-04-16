@@ -172,8 +172,10 @@ export const post: APIRoute = async context => {
         method: "GET"
       })
       const { result, errors } = await response.json()
+      console.log("result = " + result)
+      console.log("result.data = " + result?.data)
       console.log("errors = " + errors)
-      console.log("errors.message = " + errors.message)
+      console.log("errors.message = " + errors?.message)
 
       if (response.ok) {
         //data对应的是个boolean值 如果是true, 说明超过上限了
