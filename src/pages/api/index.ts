@@ -57,6 +57,8 @@ const mongoDbProxyUrlPassword =
   import.meta.env.MONGO_DB_PROXY_URL_PASS_WORD || ""
 
 const timeout = Number(import.meta.env.TIMEOUT)
+//当天的最大免费次数
+const totalCount = Number(import.meta.env.TOTAL_COUNT)
 
 let maxInputTokens = defaultMaxInputTokens
 const _ = import.meta.env.MAX_INPUT_TOKENS
@@ -144,25 +146,25 @@ export const post: APIRoute = async context => {
       else throw new Error("太长了，缩短一点吧。")
     }
 
-    console.log("ip = " + ip)
+    // console.log("ip = " + ip)
 
     if (!ip) {
       // 设备id为空，说明是异常设备，直接抛异常吧
       throw new Error("访问ip不能为空，请联系网站管理员xingstarx")
     }
     // 逻辑修改为，调用另外一个接口服务去判断当天是否还有剩余次数，具体当天最大免费次数的配置也在那个站点上
-    console.log("mongoDbProxyUrl = " + mongoDbProxyUrl)
-    console.log("!mongoDbProxyUrl = " + !mongoDbProxyUrl)
+    // console.log("mongoDbProxyUrl = " + mongoDbProxyUrl)
+    // console.log("!mongoDbProxyUrl = " + !mongoDbProxyUrl)
 
     if (mongoDbProxyUrl) {
       //如果mongoDbProxyUrl是空，说明还没有配置代理服务，需要来监控chatgpt-vercel的站点使用情况, 防止白嫖
       // 查是否当天还有免费次数
       const isReachedLimitCountUrl = `${mongoDbProxyUrl}/api/isReachedLimitCount?collectionName=${mongoDbCollectionName}&ip=${ip}` //在完整的Url后面附带参数
-      console.log("isReachedLimitCountUrl = " + isReachedLimitCountUrl)
+      // console.log("isReachedLimitCountUrl = " + isReachedLimitCountUrl)
       const base64UserNamePassword = btoa(
         `${mongoDbProxyUrlUserName}:${mongoDbProxyUrlPassword}`
       )
-      console.log("base64UserNamePassword = " + base64UserNamePassword)
+      // console.log("base64UserNamePassword = " + base64UserNamePassword)
       const headers = {
         Authorization: "Basic " + base64UserNamePassword,
         "Content-Type": "application/json"
@@ -176,13 +178,13 @@ export const post: APIRoute = async context => {
         //data对应的是个boolean值 如果是true, 说明超过上限了
         const data = json?.data
         if (data) {
-          console.log("data = " + data)
-          throw new Error("今天累计使用超过30次了，请明天再白嫖吧。")
+          // console.log("data = " + data)
+          throw new Error(`今天累计使用超过${totalCount}次了，请明天再白嫖吧。`)
         }
       } else {
-        console.log("response = " + response)
+        // console.log("response = " + response)
         const message = json?.message || ""
-        console.log("json = " + json + ", json.message = " + json?.message)
+        // console.log("json = " + json + ", json.message = " + json?.message)
         throw new Error(
           "errorCode : " + response.status + ", errorMessage: " + message
         )
@@ -238,8 +240,8 @@ export const post: APIRoute = async context => {
               if (mongoDbProxyUrl) {
                 //配置MongoDB的代理mongoDbProxyUrl后才执行这个逻辑呢
                 const question = messages[messages.length - 1].content
-                console.log("question = " + question)
-                console.log("Complete data: " + completeData) // 输出完整数据
+                // console.log("question = " + question)
+                // console.log("Complete data: " + completeData) // 输出完整数据
                 await insertChatData(ip, question, completeData)
               }
               controller.close()
@@ -324,9 +326,9 @@ export async function insertChatData(
       throw new Error(`插入失败了，快去${mongoDbProxyUrl}检查下原因吧`)
     }
   } else {
-    console.log("response = " + response)
+    // console.log("response = " + response)
     const message = json?.message || ""
-    console.log("json = " + json + ", json.message = " + json?.message)
+    // console.log("json = " + json + ", json.message = " + json?.message)
     throw new Error(
       "errorCode : " + response.status + ", errorMessage: " + message
     )
