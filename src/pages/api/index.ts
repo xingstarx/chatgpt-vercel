@@ -162,7 +162,7 @@ export const post: APIRoute = async context => {
       const base64UserNamePassword = btoa(
         `${mongoDbProxyUrlUserName}:${mongoDbProxyUrlPassword}`
       )
-      // 获取API限额
+      console.log("base64UserNamePassword = " + base64UserNamePassword)
       const headers = {
         Authorization: "authorization: Basic " + base64UserNamePassword,
         "Content-Type": "application/json"
