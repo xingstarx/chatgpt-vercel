@@ -183,7 +183,8 @@ export const post: APIRoute = async context => {
         }
       } else {
         throw new Error(
-          "查看当天是否还有免费次数接口报错，请联系开发者xingstarx"
+          errors?.map((e: { message: any }) => e.message).join("\n") ??
+            "unknown"
         )
       }
     }
@@ -323,7 +324,9 @@ export async function insertChatData(
       throw new Error(`插入失败了，快去${mongoDbProxyUrl}检查下原因吧`)
     }
   } else {
-    throw new Error(`插入失败了，抛异常了, 快去${mongoDbProxyUrl}检查下原因吧`)
+    throw new Error(
+      errors?.map((e: { message: any }) => e.message).join("\n") ?? "unknown"
+    )
   }
 }
 
