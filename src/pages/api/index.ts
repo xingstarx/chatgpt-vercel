@@ -167,23 +167,24 @@ export const post: APIRoute = async context => {
         Authorization: "authorization: Basic " + base64UserNamePassword,
         "Content-Type": "application/json"
       }
-      try {
-        const result = await fetch(isReachedLimitCountUrl, {
-          headers,
-          method: "GET"
-        }).then(r => r.json())
-        console.log("result = " + result)
-        console.log("result.data = " + result.data)
-
-        //data对应的是个boolean值 如果是true, 说明是OK的，没有超过上限
+      const response = await fetch(isReachedLimitCountUrl, {
+        headers,
+        method: "GET"
+      })
+      const { result, errors } = await response.json()
+      if (response.ok) {
+        //data对应的是个boolean值 如果是true, 说明超过上限了
+        const data = result?.data
         if (result.data) {
+          console.log("result = " + result)
+          console.log("result.data = " + result.data)
           console.error("今天累计使用超过30次了，请明天再白嫖吧。")
           throw new Error("今天累计使用超过30次了，请明天再白嫖吧。")
         }
-      } catch (e) {
-        console.error(e)
-        console.error("今天累计使用超过30次了，请明天再白嫖吧。")
-        throw new Error("今天累计使用超过30次了，请明天再白嫖吧。")
+      } else {
+        throw new Error(
+          "查看当天是否还有免费次数接口报错，请联系开发者xingstarx"
+        )
       }
     }
 
@@ -297,31 +298,32 @@ export async function insertChatData(
   const base64UserNamePassword = btoa(
     `${mongoDbProxyUrlUserName}:${mongoDbProxyUrlPassword}`
   )
-  // 获取API限额
+  // headers
   const headers = {
     Authorization: "authorization: Basic " + base64UserNamePassword,
     "Content-Type": "application/json"
   }
-  try {
-    const result = await fetch(insertChatUrl, {
-      headers,
-      method: "POST",
-      body: JSON.stringify({
-        collectionName: mongoDbCollectionName,
-        document: {
-          ip: ip,
-          question: question,
-          answer: answer
-        }
-      })
-    }).then(r => r.json())
-    //data对应的是个boolean值 如果是true, 说明是OK的，插入成功了
+  const response = await fetch(insertChatUrl, {
+    headers,
+    method: "POST",
+    body: JSON.stringify({
+      collectionName: mongoDbCollectionName,
+      document: {
+        ip: ip,
+        question: question,
+        answer: answer
+      }
+    })
+  })
+  const { result, errors } = await response.json()
+  if (response.ok) {
+    const data = result?.data
     if (!result.data) {
       console.error(`插入失败了，快去${mongoDbProxyUrl}检查下原因吧`)
+      throw new Error(`插入失败了，快去${mongoDbProxyUrl}检查下原因吧`)
     }
-  } catch (e) {
-    console.error(e)
-    console.error(`插入失败了,抛异常了，快去${mongoDbProxyUrl}检查下原因吧`)
+  } else {
+    throw new Error(`插入失败了，抛异常了, 快去${mongoDbProxyUrl}检查下原因吧`)
   }
 }
 
