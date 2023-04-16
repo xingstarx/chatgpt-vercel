@@ -22,7 +22,7 @@ export const defaultMessage = `Powered by OpenAI Vercel
 - 如果大家有不用的API Key，可以提供给我，表示感谢呢。
 - 如果你有啥疑问或者问题也可以联系我，微信:xingstarx。
 - 如果你看到这段英文[[You exceeded your current quota, please check your plan and billing details.]] 意味着余额不足了，你可以加我微信提醒我更换API Key。
-- 由于有人恶意刷接口，目前暂停使用，下周恢复正常。
+- 嗨，已经解决恶意刷接口的问题了，目前限制是每天免费20次，欢迎大家愉快的玩耍啦。
 - [[Shift]] + [[Enter]] 换行。开头输入 [[/]] 或者 [[空格]] 搜索 Prompt 预设。[[↑]] 可编辑最近一次提问。点击顶部名称滚动到顶部，点击输入框滚动到底部。`
 
 export type Setting = typeof defaultSetting
