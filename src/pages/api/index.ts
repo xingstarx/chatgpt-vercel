@@ -251,7 +251,8 @@ export const post: APIRoute = async context => {
               const json = JSON.parse(data)
               const text = json.choices[0].delta?.content
               const queue = encoder.encode(text)
-              completeData += text // 如果不是"[DONE]"，则将数据追加到完整数据变量中
+              const tempText = text || ""
+              completeData += tempText // 如果不是"[DONE]"，则将数据追加到完整数据变量中
               controller.enqueue(queue)
             } catch (e) {
               controller.error(e)
