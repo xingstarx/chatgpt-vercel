@@ -164,32 +164,27 @@ export const post: APIRoute = async context => {
       )
       console.log("base64UserNamePassword = " + base64UserNamePassword)
       const headers = {
-        Authorization: "authorization: Basic " + base64UserNamePassword,
+        Authorization: "Basic " + base64UserNamePassword,
         "Content-Type": "application/json"
       }
       const response = await fetch(isReachedLimitCountUrl, {
         headers,
         method: "GET"
       })
-      const { result, errors } = await response.json()
-      console.log("result = " + result)
-      console.log("result.data = " + result?.data)
-      console.log("errors = " + errors)
-      console.log("errors.message = " + errors?.message)
-
+      const json = await response.json()
       if (response.ok) {
         //data对应的是个boolean值 如果是true, 说明超过上限了
-        const data = result?.data
-        if (result.data) {
-          console.log("result = " + result)
-          console.log("result.data = " + result.data)
-          console.error("今天累计使用超过30次了，请明天再白嫖吧。")
+        const data = json?.data
+        if (data) {
+          console.log("data = " + data)
           throw new Error("今天累计使用超过30次了，请明天再白嫖吧。")
         }
       } else {
+        console.log("response = " + response)
+        const message = json?.message || ""
+        console.log("json = " + json + ", json.message = " + json?.message)
         throw new Error(
-          errors?.map((e: { message: any }) => e.message).join("\n") ??
-            "unknown"
+          "errorCode : " + response.status + ", errorMessage: " + message
         )
       }
     }
@@ -306,7 +301,7 @@ export async function insertChatData(
   )
   // headers
   const headers = {
-    Authorization: "authorization: Basic " + base64UserNamePassword,
+    Authorization: "Basic " + base64UserNamePassword,
     "Content-Type": "application/json"
   }
   const response = await fetch(insertChatUrl, {
@@ -321,16 +316,19 @@ export async function insertChatData(
       }
     })
   })
-  const { result, errors } = await response.json()
+  const json = await response.json()
   if (response.ok) {
-    const data = result?.data
-    if (!result.data) {
+    const data = json?.data
+    if (!data) {
       console.error(`插入失败了，快去${mongoDbProxyUrl}检查下原因吧`)
       throw new Error(`插入失败了，快去${mongoDbProxyUrl}检查下原因吧`)
     }
   } else {
+    console.log("response = " + response)
+    const message = json?.message || ""
+    console.log("json = " + json + ", json.message = " + json?.message)
     throw new Error(
-      errors?.map((e: { message: any }) => e.message).join("\n") ?? "unknown"
+      "errorCode : " + response.status + ", errorMessage: " + message
     )
   }
 }
