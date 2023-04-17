@@ -18,6 +18,7 @@ export const defaultMessage = `Powered by OpenAI Vercel
 - 如果你不懂技术也想要搭建一个类似的，那么可以出技术服务费找我，我帮你搞定技术问题，提供后续的技术支持(不支持定制化需求)，你只需要提供API Key,以及域名(可代买)，可详谈。
 - 也支持部署类似这张图[ChatGPT-Next-Web](https://www.cheapxyzs.online/chatgpt_0_2.jpg)的效果哦，可以通过授权码访问的，防止白嫖，用来收费哦。
 - 如果你想要更进一步的了解ChatGPT的使用,变现,最新资讯等可以考虑一下这个小专栏[ChatGPT从0到1](https://www.cheapxyzs.online/chatgpt_0_1.jpg)
+- 建了一个aigc的微信交流群呢，可以来交流学习啊,技术浪潮来临时，普通人最好拥抱它呀[微信群](https://www.cheapxyzs.online/chatgpt_0_3.jpg)
 - 目前的API Key 由我自己免费提供，欢迎大家白嫖，一般需求用我这个就可以了，我也是用爱发电啊。
 - 如果大家有不用的API Key，可以提供给我，表示感谢呢。
 - 如果你有啥疑问或者问题也可以联系我，微信:xingstarx。
