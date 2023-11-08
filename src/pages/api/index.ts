@@ -204,7 +204,7 @@ export const post: APIRoute = async context => {
         timeout: !timeout || Number.isNaN(timeout) ? 30000 : timeout,
         method: "POST",
         body: JSON.stringify({
-          model: model || "gpt-3.5-turbo",
+          model: model || "gpt-3.5-turbo-1106",
           messages: messages.map(k => ({ role: k.role, content: k.content })),
           temperature,
           // max_tokens: 4096 - tokens,
