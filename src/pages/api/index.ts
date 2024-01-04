@@ -124,6 +124,12 @@ export const post: APIRoute = async context => {
           splitKeys(content).map(k => fetchBilling(k))
         )
         return new Response(await genBillingsTable(billings))
+      } else if (
+        content.startsWith(
+          "Please tell me what is ChatGPT in English with at most 20 words"
+        )
+      ) {
+        throw new Error(content)
       }
     }
 
